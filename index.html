@@ -861,8 +861,7 @@ const Game = {
                     obj.dead = true;
                     obj.el.classList.add('pop');
                     setTimeout(() => obj.el.remove(), 200);
-                    if(isGood) { 
-                        this.health = Math.min(100, this.health + 8);
+                    if(isGood) {
                         obj.el.style.transform = 'scale(1.5)';
                         this.combo++;
                         const pitch = Math.min(2.0, 1.0 + (this.combo * 0.1));
