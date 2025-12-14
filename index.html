@@ -239,7 +239,7 @@
 
     <div id="screen-end" class="screen" style="background: white;">
         <div style="display:flex; flex-direction:column; gap:20px; align-items:center; padding: 20px;">
-            <h1 style="font-size: 32px; margin-bottom: 10px;">Happy Birthday!</h1>
+            <!-- <h1 style="font-size: 32px; margin-bottom: 10px;">Happy Birthday!</h1> -->
             <div id="final-art" class="asset-box jitter" style="width:80vw; height:100vw; max-width: 400px; max-height: 50vh;">assets/ui/final_art.png</div>
             <h2 id="end-score" style="font-size: 24px;">Score: 0</h2>
             <div id="btn-replay" class="asset-box btn jitter" style="width:150px; height:60px; margin-top: 10px;">REPLAY</div>
@@ -252,6 +252,7 @@ const ASSETS = {
     'title':       { path: 'assets/ui/title.png' },
     'btn_start':   { path: 'assets/ui/btn_start.png' },
     'btn_ready':   { path: 'assets/ui/btn_ready.png' },
+    'btn_replay':   { path: 'assets/ui/btn_replay.png' },
     'health_bar':  { path: 'assets/ui/health_bar.png' },
     'final_art':   { path: 'assets/ui/final_art.png' },
     'tut_game1':     { path: 'assets/ui/tut_game1.png' },
@@ -450,6 +451,8 @@ const Game = {
         // FIXED: Explicitly load the button assets here
         Engine.loadAsset(document.getElementById('btn-start'), 'btn_start');
         Engine.loadAsset(document.getElementById('btn-ready'), 'btn_ready');
+        Engine.loadAsset(document.getElementById('btn-replay'), 'btn_replay');
+        
 
         // Removed bg_start load
         Engine.loadAsset(document.getElementById('title-art'), 'title');
