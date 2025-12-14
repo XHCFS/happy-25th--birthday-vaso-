@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Birthday Game - Sketchy Mode</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #f0f0f0;
+            font-family: monospace;
+            touch-action: none;
+            user-select: none;
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
+        }
+
+        .screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        .screen.active { display: flex; }
+
+        /* FIXED: Added background color for Start and Tutorial screens here */
+        #screen-start, #screen-tutorial {
+            background-color: #f6e6ff; /* Very light magenta/indigo */
+        }
+
+        .asset-box {
+            position: relative;
+            background-color: rgba(255, 0, 0, 0.1);
+            border: 2px dashed #ff0000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #ff0000;
+            font-size: 11px;
+            font-weight: bold;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        
+        .asset-box.loaded {
+            background-color: transparent;
+            border: none;
+            color: transparent; 
+        }
+
+        .btn {
+            cursor: pointer;
+            background-color: rgba(0, 0, 255, 0.1);
+            border-color: blue;
+            color: blue;
+            z-index: 1000;
+            transition: transform 0.1s, background-color 0.1s;
+        }
+        .btn:hover {
+            background-color: rgba(0, 0, 255, 0.3);
+        }
+        .btn:active {
+            transform: scale(0.95);
+            background-color: rgba(0, 0, 255, 0.5);
+        }
+
+        .jitter {
+            animation: jitter 0.25s infinite steps(2);
+        }
+        @keyframes jitter {
+            0%   { transform: translate(1px, 1px) rotate(0deg); }
+            25%  { transform: translate(-1px, -2px) rotate(-1deg); }
+            50%  { transform: translate(-2px, 0px) rotate(1deg); }
+            75%  { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(-1px, 1px) rotate(-1deg); }
+        }
+        
+        .shake {
+            animation: shake 0.3s cubic-bezier(.36,.07,.19,.97);
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate(-3px, 0); }
+            20%, 80% { transform: translate(3px, 0); }
+            30%, 50%, 70% { transform: translate(-3px, 0); }
+            40%, 60% { transform: translate(3px, 0); }
+        }
+        
+        .flash {
+            animation: flash 0.3s;
+        }
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        .pop {
+            animation: pop 0.2s ease-out;
+        }
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        .count-anim {
+            animation: countPop 0.8s ease-out forwards;
+        }
+        @keyframes countPop {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            40% { transform: translate(-50%, -50%) scale(1.0); }
+            80% { transform: translate(-50%, -50%) scale(1.0); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+        }
+
+        .hud {
+            position: fixed;
+            top: 10px;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            z-index: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            pointer-events: none;
+        }
+        
+        .hud > * {
+            pointer-events: none;
+        }
+
+        #screen-game {
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* Tutorial Text Styling */
+        .tut-text {
+            font-size: 20px;
+            color: #4a1a6a; /* Dark purple for text */
+            text-align: center;
+            white-space: pre-wrap;
+            line-height: 1.5;
+            padding: 20px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 15px;
+            border: 2px dashed #b16cd6;
+            max-width: 90%;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="hud" class="hud" style="display:none;">
+        <div id="ui-health" class="asset-box" style="width:40vw; max-width:200px; height:40px; position: relative;">
+            assets/ui/health_bar.png
+            <div id="health-fill" style="position:absolute; left:5px; top:5px; bottom: 5px; background:rgba(255,77,109,0.8); width:90%; transition: width 0.3s; border-radius: 3px;"></div>
+        </div>
+        <div style="font-size:24px; font-weight:bold; color:#333; text-shadow: 1px 1px 0 white;">Time: <span id="timer">0</span>s</div>
+    </div>
+
+    <div id="screen-start" class="screen active">
+        <div style="display:flex; flex-direction:column; gap:30px; align-items:center;">
+            <div id="title-art" class="asset-box jitter" style="width:90vw; height:50vw; max-height: 300px;">assets/ui/title.png</div>
+            <div id="btn-start" class="asset-box btn jitter" style="width:60vw; height:20vw; max-height: 100px;">
+                START GAME<br>(assets/ui/btn_start.png)
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-tutorial" class="screen">
+        <div style="display:flex; flex-direction:column; gap:30px; align-items:center; width: 100%;">
+            <div id="tut-text" class="tut-text jitter">
+                Loading...
+            </div>
+            <div id="btn-ready" class="asset-box btn jitter" style="width:50vw; height:18vw; max-width: 200px; max-height: 80px;">
+                I'M READY<br>(assets/ui/btn_ready.png)
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-game" class="screen"></div>
+
+    <div id="screen-end" class="screen" style="background: white;">
+        <div style="display:flex; flex-direction:column; gap:20px; align-items:center; padding: 20px;">
+            <h1 style="font-size: 32px; margin-bottom: 10px;">Happy Birthday!</h1>
+            <div id="final-art" class="asset-box jitter" style="width:80vw; height:100vw; max-width: 400px; max-height: 50vh;">assets/ui/final_art.png</div>
+            <h2 id="end-score" style="font-size: 24px;">Score: 0</h2>
+            <div id="btn-replay" class="asset-box btn jitter" style="width:150px; height:60px; margin-top: 10px;">REPLAY</div>
+        </div>
+    </div>
+
+<script>
+const ASSETS = {
+    // 'bg_start':    { path: 'assets/ui/bg_start.png' }, // REMOVED per request
+    'title':       { path: 'assets/ui/title.png' },
+    'btn_start':   { path: 'assets/ui/btn_start.png' },
+    'btn_ready':   { path: 'assets/ui/btn_ready.png' },
+    'health_bar':  { path: 'assets/ui/health_bar.png' },
+    'final_art':   { path: 'assets/ui/final_art.png' },
+    'count_3':     { path: 'assets/ui/count_3.png' },
+    'count_2':     { path: 'assets/ui/count_2.png' },
+    'count_1':     { path: 'assets/ui/count_1.png' },
+    'bgm_menu':    { path: 'assets/music/bg_menu.mp3' },
+    'bgm_game1':   { path: 'assets/music/bg_game1.mp3' },
+    'bgm_game2':   { path: 'assets/music/bg_game2.mp3' },
+    'bgm_game3':   { path: 'assets/music/bg_game3.mp3' },
+    'bgm_end':     { path: 'assets/music/bg_end.mp3' },
+    'bg_game1':    { path: 'assets/game1/bg.png' },
+    'hero_run':    { path: 'assets/game1/hero_run_', frames: 4 }, 
+    'enemy_g':     { path: 'assets/game1/spike.png' },
+    'enemy_a':     { path: 'assets/game1/bird_', frames: 2 },
+    'bg_game2':    { path: 'assets/game2/bg.png' },
+    'paddle':      { path: 'assets/game2/paddle.png' },
+    'ball':        { path: 'assets/game2/ball.png' },
+    'bg_game3':    { path: 'assets/game3/bg.png' },
+    'item_good':   { path: 'assets/game3/cake.png' },
+    'item_bad':    { path: 'assets/game3/bomb_', frames: 2 },
+};
+
+const Engine = {
+    lastAnimTime: 0,
+    audioCtx: null,
+    currentTrack: null,
+    currentTrackName: null,
+
+    initAudio: function() {
+        if(!this.audioCtx) {
+            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if(this.audioCtx.state === 'suspended') {
+            this.audioCtx.resume();
+        }
+    },
+
+    playMusic: function(name) {
+        const key = 'bgm_' + name;
+        if(!ASSETS[key]) return;
+        if(this.currentTrackName === name) return;
+        if(this.currentTrack) {
+            this.currentTrack.pause();
+            this.currentTrack.currentTime = 0;
+        }
+        this.currentTrackName = name;
+        this.currentTrack = new Audio(ASSETS[key].path);
+        this.currentTrack.loop = true;
+        this.currentTrack.volume = 0.4;
+        this.currentTrack.play().catch(e => {
+            console.log("Music waiting for interaction");
+        });
+    },
+
+    playSFX: function(name, rate = 1.0) {
+        try {
+            this.initAudio();
+            const osc = this.audioCtx.createOscillator();
+            const gain = this.audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(this.audioCtx.destination);
+
+            if(name === 'jump') { osc.frequency.value = 600; osc.type = 'square'; }
+            else if(name === 'hit' || name === 'miss') { osc.frequency.value = 150; osc.type = 'sawtooth'; }
+            else if(name === 'collect' || name === 'bounce') { osc.frequency.value = 880; osc.type = 'sine'; }
+            else if(name === 'explode') { osc.frequency.value = 100; osc.type = 'sawtooth'; }
+            else if(name === 'count') { osc.frequency.value = 440; osc.type = 'sine'; }
+            else { osc.frequency.value = 440; osc.type = 'triangle'; }
+
+            osc.frequency.value *= rate;
+
+            osc.start();
+            gain.gain.setValueAtTime(0.1, this.audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.00001, this.audioCtx.currentTime + 0.15);
+            osc.stop(this.audioCtx.currentTime + 0.15);
+        } catch(e) {}
+    },
+    
+    loadAsset: function(el, key) {
+        if(!ASSETS[key]) return;
+        el.dataset.key = key;
+        el.dataset.frame = 0;
+        
+        const img = new Image();
+        img.src = ASSETS[key].frames ? ASSETS[key].path + '0.png' : ASSETS[key].path;
+        img.onload = () => {
+            el.classList.add('loaded');
+            el.style.backgroundImage = `url('${img.src}')`;
+            // Keep text only if explicit (like buttons), otherwise clear
+            if(!el.classList.contains('btn')) el.innerText = '';
+            else el.style.color = 'transparent'; // Hide text on buttons if image loads
+        };
+    },
+    
+    animate: function(now) {
+        if(now - this.lastAnimTime < 150) return; 
+        this.lastAnimTime = now;
+
+        document.querySelectorAll('.asset-box').forEach(el => {
+            const key = el.dataset.key;
+            if(!key || !ASSETS[key] || !ASSETS[key].frames) return;
+            
+            let f = parseInt(el.dataset.frame) + 1;
+            if(f >= ASSETS[key].frames) f = 0;
+            
+            el.dataset.frame = f;
+            el.style.backgroundImage = `url('${ASSETS[key].path}${f}.png')`;
+        });
+    }
+};
+
+const Game = {
+    state: 'menu',
+    activeGame: null,
+    loopId: null,
+    score: 0,
+    health: 100,
+    width: 0,
+    height: 0,
+    entities: [],
+    combo: 0,
+
+    init: function() {
+        this.updateDimensions();
+        window.addEventListener('resize', () => this.updateDimensions());
+        
+        document.getElementById('btn-start').onclick = (e) => {
+            e.preventDefault(); e.stopPropagation();
+            Engine.playSFX('click');
+            this.showTutorial('game1');
+        };
+        
+        document.getElementById('btn-ready').onclick = (e) => {
+            e.preventDefault(); e.stopPropagation();
+            Engine.playSFX('click');
+            this.startCountdown();
+        };
+
+        document.getElementById('btn-replay').onclick = () => {
+            Engine.playSFX('click');
+            location.reload();
+        };
+
+        // FIXED: Explicitly load the button assets here
+        Engine.loadAsset(document.getElementById('btn-start'), 'btn_start');
+        Engine.loadAsset(document.getElementById('btn-ready'), 'btn_ready');
+
+        // Removed bg_start load
+        Engine.loadAsset(document.getElementById('title-art'), 'title');
+        Engine.loadAsset(document.getElementById('ui-health'), 'health_bar');
+        Engine.loadAsset(document.getElementById('final-art'), 'final_art');
+        
+        Engine.playMusic('menu');
+        this.menuLoop();
+    },
+    
+    updateDimensions: function() {
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
+    },
+    
+    menuLoop: function() {
+        Engine.animate(Date.now());
+        requestAnimationFrame(() => this.menuLoop());
+    },
+
+    // FIXED: Updated tutorial logic to use text instead of image
+    showTutorial: function(gameName) {
+        this.activeGame = gameName;
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('screen-tutorial').classList.add('active');
+        
+        const tutText = document.getElementById('tut-text');
+        if(gameName === 'game1') {
+            tutText.innerHTML = '<strong>SAVE KOSTAKIS</strong><br><br>Escape Plant AIDS and missing posters';
+        } else if(gameName === 'game2') {
+            tutText.innerHTML = '<strong>SAVE TURTLE!!</strong><br><br>You dropped your turtle in a carnival ride..<br>Save him';
+        } else if(gameName === 'game3') {
+            tutText.innerHTML = '<strong>SAVE.. YOURSELF</strong><br><br>AVOID HEART FAILURE...<br>drink the energy drinks...';
+        }
+    },
+
+    startCountdown: function() {
+        const gameName = this.activeGame;
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        const container = document.getElementById('screen-game');
+        container.classList.add('active');
+        
+        container.innerHTML = '';
+        Engine.loadAsset(container, 'bg_' + gameName);
+        Engine.playMusic(gameName);
+
+        document.getElementById('hud').style.display = 'none';
+
+        let count = 3;
+        
+        const tick = () => {
+            if (count > 0) {
+                Engine.playSFX('count');
+                const numEl = document.createElement('div');
+                numEl.className = 'asset-box count-anim jitter';
+                numEl.style.position = 'absolute';
+                numEl.style.left = '50%';
+                numEl.style.top = '50%';
+                numEl.style.width = '150px'; 
+                numEl.style.height = '150px';
+                numEl.style.transform = 'translate(-50%, -50%)';
+                numEl.style.zIndex = '1000';
+                
+                Engine.loadAsset(numEl, 'count_' + count);
+                container.appendChild(numEl);
+                
+                setTimeout(() => { if(numEl.parentNode) numEl.remove(); }, 900);
+                
+                count--;
+                setTimeout(tick, 1000);
+            } else {
+                this.startGame(gameName, true);
+            }
+        };
+        
+        tick();
+    },
+
+    startGame: function(gameName, skipSetup = false) {
+        this.updateDimensions();
+        if(!skipSetup) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-game').classList.add('active');
+        }
+        
+        document.getElementById('hud').style.display = 'flex';
+        
+        this.state = 'playing';
+        this.score = 0;
+        this.health = 100;
+        this.entities = [];
+        this.combo = 0;
+        
+        window.onpointerdown = null;
+        window.onkeydown = null;
+        window.onpointermove = null;
+        window.ontouchmove = null;
+        
+        if(!skipSetup) {
+            const container = document.getElementById('screen-game');
+            container.innerHTML = '';
+            Engine.loadAsset(container, 'bg_' + gameName);
+            Engine.playMusic(gameName);
+        }
+
+        if(gameName === 'game1') this.initRunner();
+        if(gameName === 'game2') this.initPong();
+        if(gameName === 'game3') this.initCatcher();
+
+        if(this.loopId) cancelAnimationFrame(this.loopId);
+        this.loop();
+    },
+
+    loop: function() {
+        if(this.state !== 'playing') return;
+
+        this.score += 1/60;
+        document.getElementById('timer').innerText = Math.floor(this.score);
+        Engine.animate(Date.now());
+
+        if(this.activeGame === 'game1') this.updateRunner();
+        if(this.activeGame === 'game2') this.updatePong();
+        if(this.activeGame === 'game3') this.updateCatcher();
+
+        this.entities.forEach(e => {
+            e.x += e.vx;
+            e.y += e.vy;
+
+            if(this.activeGame === 'game1' && e.type === 'enemy' && e.isAir) {
+                e.y = e.initialY + Math.sin(this.score * 5) * 40; 
+            }
+
+            e.el.style.left = Math.round(e.x) + 'px';
+            e.el.style.top = Math.round(e.y) + 'px';
+        });
+
+        document.getElementById('health-fill').style.width = Math.max(0, this.health * 0.9) + '%';
+        
+        if(this.health <= 0) {
+            this.nextLevel();
+        } else {
+            this.loopId = requestAnimationFrame(() => this.loop());
+        }
+    },
+
+    spawn: function(key, x, y, w, h, type) {
+        const el = document.createElement('div');
+        el.className = 'asset-box jitter';
+        el.style.position = 'absolute';
+        el.style.left = Math.round(x) + 'px';
+        el.style.top = Math.round(y) + 'px';
+        el.style.width = w + 'px';
+        el.style.height = h + 'px';
+        el.style.zIndex = '100'; // Ensure assets are above background
+        Engine.loadAsset(el, key);
+        document.getElementById('screen-game').appendChild(el);
+        const ent = { el, x, y, initialY: y, w, h, vx:0, vy:0, type, dead:false };
+        this.entities.push(ent);
+        return ent;
+    },
+
+    nextLevel: function() {
+        cancelAnimationFrame(this.loopId);
+        this.health = 100;
+        this.state = 'menu';
+        
+        if(this.activeGame === 'game1') {
+            Engine.playMusic('menu');
+            this.showTutorial('game2');
+        }
+        else if(this.activeGame === 'game2') {
+            Engine.playMusic('menu');
+            this.showTutorial('game3');
+        }
+        else {
+            Engine.playMusic('end');
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('hud').style.display = 'none';
+            document.getElementById('screen-end').classList.add('active');
+            document.getElementById('end-score').innerText = "Total Time: " + Math.floor(this.score) + "s";
+        }
+    },
+
+    // === GAME 1: RUNNER ===
+    hero: null,
+    timer: 0,
+    groundY: 0,
+    
+    initRunner: function() {
+        // INCREASED SIZE: Hero 100->150
+        this.groundY = this.height * 0.85; 
+        this.hero = this.spawn('hero_run', 50, this.groundY - 150, 150, 150, 'hero');
+        this.hero.onGround = true;
+        this.hero.jumpCount = 0; 
+        this.timer = 120;
+        
+        const jumpAction = () => {
+            if(this.state === 'playing' && this.hero) {
+                if(this.hero.onGround || this.hero.jumpCount < 2) {
+                    this.hero.vy = -22; 
+                    this.hero.onGround = false;
+                    this.hero.jumpCount++;
+                    Engine.playSFX('jump', this.hero.jumpCount === 2 ? 1.5 : 1.0);
+                }
+            }
+        };
+
+        window.onpointerdown = (e) => {
+            if(e.target.closest('.btn') || e.target.closest('.hud')) return;
+            jumpAction();
+        };
+        
+        window.onkeydown = (e) => {
+            if(e.code === 'Space') jumpAction();
+        };
+    },
+    
+    updateRunner: function() {
+        if(!this.hero) return;
+        
+        this.hero.vy += 0.9;
+        
+        // Updated for new size (150px)
+        const targetGroundY = this.groundY - 150;
+        
+        if(this.hero.y >= targetGroundY && this.hero.vy >= 0) {
+            this.hero.y = targetGroundY;
+            this.hero.vy = 0;
+            this.hero.onGround = true;
+            this.hero.jumpCount = 0; 
+        }
+        
+        this.timer--;
+        if(this.timer <= 0) {
+            const difficulty = Math.min(this.score / 60, 3);
+            const isAir = Math.random() > 0.85;
+            
+            // INCREASED SIZE: Enemy 80->120. Adjusted spawn Y logic.
+            const enemyY = isAir ? (this.groundY - 300) : (this.groundY - 120);
+            
+            const enemy = this.spawn(isAir ? 'enemy_a' : 'enemy_g', this.width + 50, enemyY, 120, 120, 'enemy');
+            enemy.isAir = isAir; 
+            enemy.vx = -(4 + difficulty * 2); 
+            this.timer = Math.max(40, 120 - difficulty * 20);
+        }
+
+        this.entities.forEach(e => {
+            if(e.type === 'enemy') {
+                if(e.x < -150) { e.dead = true; e.el.remove(); }
+                
+                // Adjusted collision for larger sizes
+                const dx = Math.abs(this.hero.x + 75 - (e.x + 60));
+                const dy = Math.abs(this.hero.y + 75 - (e.y + 60));
+                
+                if(!e.dead && dx < 100 && dy < 100) {
+                    e.dead = true;
+                    e.el.classList.add('pop');
+                    setTimeout(() => e.el.remove(), 200);
+                    this.health -= 25;
+                    Engine.playSFX('hit');
+                    document.body.classList.add('shake');
+                    this.hero.el.classList.add('flash');
+                    setTimeout(() => {
+                        document.body.classList.remove('shake');
+                        this.hero.el.classList.remove('flash');
+                    }, 300);
+                }
+            }
+        });
+        
+        this.entities = this.entities.filter(e => !e.dead || e.type === 'hero');
+    },
+
+    // === GAME 2: PONG ===
+    paddle: null, 
+    balls: [],
+    ballSpawnTimer: 0,
+    
+    initPong: function() {
+        const paddleY = this.height - 150;
+        // INCREASED SIZE: Paddle 130->180, Ball 50->60
+        this.paddle = this.spawn('paddle', this.width/2 - 90, paddleY, 180, 40, 'paddle');
+        
+        const ball = this.spawn('ball', this.width/2 - 30, 100, 60, 60, 'ball');
+        ball.vx = 4; ball.vy = 4;
+        this.balls = [ball];
+        this.ballSpawnTimer = 300;
+        
+        window.onpointermove = (e) => {
+            if(this.paddle && this.state === 'playing') {
+                this.paddle.x = Math.max(0, Math.min(this.width - 180, e.clientX - 90));
+            }
+        };
+        
+        window.ontouchmove = (e) => {
+            if(this.paddle && this.state === 'playing') {
+                e.preventDefault();
+                this.paddle.x = Math.max(0, Math.min(this.width - 180, e.touches[0].clientX - 90));
+            }
+        };
+    },
+    
+    updatePong: function() {
+        if(!this.paddle || this.balls.length === 0) return;
+        const difficulty = Math.min(this.score / 25, 3);
+        
+        this.ballSpawnTimer--;
+        if(this.ballSpawnTimer <= 0 && this.balls.length < 4) {
+            const newBall = this.spawn('ball', Math.random() * (this.width - 60), 100, 60, 60, 'ball');
+            newBall.vx = (Math.random() - 0.5) * 8;
+            newBall.vy = 4 + difficulty;
+            this.balls.push(newBall);
+            this.ballSpawnTimer = Math.max(180, 300 - difficulty * 40);
+        }
+        
+        this.balls.forEach(ball => {
+            if(ball.dead) return;
+            
+            if(ball.x < 0 || ball.x > this.width - 60) {
+                ball.vx *= -1;
+                ball.x = Math.max(0, Math.min(this.width - 60, ball.x));
+            }
+            if(ball.y < 60) {
+                ball.vy *= -1;
+                ball.y = 60;
+            }
+            
+            const ballBottom = ball.y + 60;
+            const ballCenterX = ball.x + 30;
+            
+            // Adjusted collision for new sizes
+            if(ballBottom >= this.paddle.y && ballBottom <= this.paddle.y + 40 &&
+               ballCenterX >= this.paddle.x && ballCenterX <= this.paddle.x + 180) {
+                
+                const paddleCenter = this.paddle.x + 90;
+                const hitOffset = (ballCenterX - paddleCenter) / 90; 
+                
+                ball.vx = hitOffset * 10; 
+                ball.vy = -Math.abs(ball.vy * 1.05); 
+                ball.y = this.paddle.y - 60;
+                
+                Engine.playSFX('bounce', 1.0 + Math.abs(hitOffset)); 
+                this.paddle.el.classList.add('flash');
+                setTimeout(() => this.paddle.el.classList.remove('flash'), 200);
+            }
+            
+            if(ball.y > this.height) {
+                ball.dead = true; ball.el.remove();
+                this.health -= 15;
+                Engine.playSFX('miss');
+                document.body.classList.add('shake');
+                setTimeout(() => document.body.classList.remove('shake'), 300);
+            }
+        });
+        
+        this.balls = this.balls.filter(b => !b.dead);
+        if(this.balls.length === 0) {
+            const ball = this.spawn('ball', this.width/2 - 30, 100, 60, 60, 'ball');
+            ball.vx = 4;
+            ball.vy = 4 + difficulty;
+            this.balls = [ball];
+        }
+    },
+
+    // === GAME 3: CATCHER ===
+    initCatcher: function() {
+        this.timer = 90;
+        this.combo = 0;
+    },
+    
+    updateCatcher: function() {
+        this.timer--;
+        if(this.timer <= 0) {
+            const difficulty = Math.min(this.score / 40, 2.5);
+            const isGood = Math.random() > 0.35;
+            
+            // INCREASED SIZE: Items 100->130
+            const obj = this.spawn(isGood ? 'item_good' : 'item_bad', Math.random() * (this.width - 130), -130, 130, 130, isGood ? 'good' : 'bad');
+            
+            const baseSpeed = 2.0 + difficulty * 1.2;
+            const randomVar = (Math.random() * 2) - 0.5; 
+            obj.vy = Math.max(1, baseSpeed + randomVar);
+            
+            obj.el.style.cursor = 'pointer';
+            
+            const hitHandler = (e) => {
+                e.stopPropagation();
+                if(!obj.dead) {
+                    obj.dead = true;
+                    obj.el.classList.add('pop');
+                    setTimeout(() => obj.el.remove(), 200);
+                    if(isGood) { 
+                        this.health = Math.min(100, this.health + 8);
+                        obj.el.style.transform = 'scale(1.5)';
+                        this.combo++;
+                        const pitch = Math.min(2.0, 1.0 + (this.combo * 0.1));
+                        Engine.playSFX('collect', pitch);
+                        
+                    } else { 
+                        this.health -= 25;
+                        this.combo = 0;
+                        Engine.playSFX('explode');
+                        document.body.classList.add('shake');
+                        setTimeout(() => document.body.classList.remove('shake'), 300);
+                    }
+                }
+            };
+            
+            obj.el.onpointerdown = hitHandler;
+
+            this.timer = Math.max(25, 90 - difficulty * 18);
+        }
+        
+        this.entities.forEach(e => {
+            if((e.type === 'good' || e.type === 'bad') && e.y > this.height) {
+                if(!e.dead && e.type === 'good') {
+                    this.health -= 15;
+                    this.combo = 0;
+                    Engine.playSFX('miss');
+                    document.body.classList.add('shake');
+                    setTimeout(() => document.body.classList.remove('shake'), 300);
+                }
+                e.dead = true; e.el.remove();
+            }
+        });
+        this.entities = this.entities.filter(e => !e.dead);
+    }
+};
+
+window.onload = () => {
+    Game.init();
+};
+</script>
+</body>
+</html>
