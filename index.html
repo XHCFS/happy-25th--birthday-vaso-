@@ -260,6 +260,45 @@ const ASSETS = {
     'item_bad':    { path: 'assets/game3/bomb_', frames: 2 },
 };
 
+const loadedImages = {};
+
+function preloadAllAssets(callback) {
+    const assetKeys = Object.keys(ASSETS);
+    let loadedCount = 0;
+
+    assetKeys.forEach(key => {
+        const asset = ASSETS[key];
+        if(asset.frames) {
+            // If it's an animated sprite, preload all frames
+            loadedImages[key] = [];
+            for(let i=0; i<asset.frames; i++) {
+                const img = new Image();
+                img.src = `${asset.path}${i}.png`;
+                img.onload = () => {
+                    loadedImages[key][i] = img;
+                    if(isAllLoaded()) callback?.();
+                };
+            }
+        } else if(asset.path.endsWith('.png') || asset.path.endsWith('.jpg') || asset.path.endsWith('.webp')) {
+            // single image
+            const img = new Image();
+            img.src = asset.path;
+            img.onload = () => {
+                loadedImages[key] = img;
+                if(isAllLoaded()) callback?.();
+            };
+        } else {
+            // skip non-image assets like audio
+            loadedCount++;
+        }
+    });
+
+    function isAllLoaded() {
+        loadedCount++;
+        return loadedCount >= assetKeys.length;
+    }
+}
+
 const Engine = {
     lastAnimTime: 0,
     audioCtx: null,
@@ -317,23 +356,24 @@ const Engine = {
     },
     
     loadAsset: function(el, key) {
-        if(!ASSETS[key]) return;
+        if(!loadedImages[key]) return; 
         el.dataset.key = key;
         el.dataset.frame = 0;
-        
-        const img = new Image();
-        img.src = ASSETS[key].frames ? ASSETS[key].path + '0.png' : ASSETS[key].path;
-        img.onload = () => {
-            el.classList.add('loaded');
-            el.style.backgroundImage = `url('${img.src}')`;
-            // Keep text only if explicit (like buttons), otherwise clear
-            if(!el.classList.contains('btn')) el.childNodes.forEach(node => {
-                if (node.nodeType === Node.TEXT_NODE) {
-                    node.remove();
-                }
+
+        if(ASSETS[key].frames) {
+            el.style.backgroundImage = `url('${loadedImages[key][0].src}')`;
+        } else {
+            el.style.backgroundImage = `url('${loadedImages[key].src}')`;
+        }
+
+        el.classList.add('loaded');
+        if(!el.classList.contains('btn')) {
+            el.childNodes.forEach(node => {
+                if (node.nodeType === Node.TEXT_NODE) node.remove();
             });
-            else el.style.color = 'transparent'; // Hide text on buttons if image loads
-        };
+        } else {
+            el.style.color = 'transparent';
+        }
     },
     
     animate: function(now) {
@@ -818,8 +858,15 @@ const Game = {
 };
 
 window.onload = () => {
-    Game.init();
+    preloadAllAssets(() => {
+        console.log('All assets preloaded!');
+        Game.init();
+    });
 };
+
 </script>
+<link rel="preload" as="image" href="assets/ui/btn_start.png">
+<link rel="preload" as="image" href="assets/ui/btn_ready.png">
+<link rel="preload" as="image" href="assets/ui/title.png">
 </body>
 </html>
