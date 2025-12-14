@@ -166,6 +166,29 @@
             border: 2px dashed #b16cd6;
             max-width: 90%;
         }
+
+        #health-fill {
+            
+            z-index: -1;
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            bottom: 0px;
+            width: 90%;
+            overflow: hidden; 
+            transition: width 0.3s;
+            border-radius: 3px;
+        }
+
+        /* The image fill */
+        #health-fill::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: url('assets/ui/health_fill.png') no-repeat;
+            background-size: cover;
+        }
+
     </style>
 </head>
 <body>
@@ -173,7 +196,7 @@
     <div id="hud" class="hud" style="display:none;">
         <div id="ui-health" class="asset-box" style="width:40vw; max-width:200px; height:40px; position: relative;">
             assets/ui/health_bar.png
-            <div id="health-fill" style="position:absolute; left:5px; top:5px; bottom: 5px; background:rgba(255,77,109,0.8); width:90%; transition: width 0.3s; border-radius: 3px;"></div>
+            <div id="health-fill"></div>
         </div>
         <div style="font-size:24px; font-weight:bold; color:#333; text-shadow: 1px 1px 0 white;">Time: <span id="timer">0</span>s</div>
     </div>
@@ -304,7 +327,11 @@ const Engine = {
             el.classList.add('loaded');
             el.style.backgroundImage = `url('${img.src}')`;
             // Keep text only if explicit (like buttons), otherwise clear
-            if(!el.classList.contains('btn')) el.innerText = '';
+            if(!el.classList.contains('btn')) el.childNodes.forEach(node => {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    node.remove();
+                }
+            });
             else el.style.color = 'transparent'; // Hide text on buttons if image loads
         };
     },
