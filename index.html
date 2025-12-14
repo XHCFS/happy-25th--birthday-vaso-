@@ -201,7 +201,21 @@
         <div style="font-size:24px; font-weight:bold; color:#333; text-shadow: 1px 1px 0 white;">Time: <span id="timer">0</span>s</div>
     </div>
 
-    <div id="screen-start" class="screen active">
+    <!-- <div id="screen-loading" class="screen active" style="background: #f6e6ff; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <div class="tut-text" style="font-size: 24px; text-align: center;">
+            Loading...
+        </div>
+    </div> -->
+
+    <div id="screen-loading" class="screen active" style=" background: #f6e6ff;">
+        <div style="display:flex; flex-direction:column; gap:30px; align-items:center;">
+            <div class="tut-text jitter">
+                Loading...
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-start" class="screen">
         <div style="display:flex; flex-direction:column; gap:30px; align-items:center;">
             <div id="title-art" class="asset-box jitter" style="width:90vw; height:50vw; max-height: 300px;">assets/ui/title.png</div>
             <div id="btn-start" class="asset-box btn jitter" style="width:60vw; height:20vw; max-height: 100px;">
@@ -263,41 +277,46 @@ const ASSETS = {
 const loadedImages = {};
 
 function preloadAllAssets(callback) {
+    const startTime = Date.now();
     const assetKeys = Object.keys(ASSETS);
     let loadedCount = 0;
+
+    function isAllLoaded() {
+        loadedCount++;
+        if(loadedCount >= assetKeys.length) {
+            const elapsed = Date.now() - startTime;
+            const minTime = 2000; // 2 seconds
+            const delay = Math.max(0, minTime - elapsed);
+            setTimeout(callback, delay);
+        }
+    }
 
     assetKeys.forEach(key => {
         const asset = ASSETS[key];
         if(asset.frames) {
-            // If it's an animated sprite, preload all frames
             loadedImages[key] = [];
             for(let i=0; i<asset.frames; i++) {
                 const img = new Image();
                 img.src = `${asset.path}${i}.png`;
                 img.onload = () => {
                     loadedImages[key][i] = img;
-                    if(isAllLoaded()) callback?.();
+                    if(i === asset.frames - 1) isAllLoaded();
                 };
             }
         } else if(asset.path.endsWith('.png') || asset.path.endsWith('.jpg') || asset.path.endsWith('.webp')) {
-            // single image
             const img = new Image();
             img.src = asset.path;
             img.onload = () => {
                 loadedImages[key] = img;
-                if(isAllLoaded()) callback?.();
+                isAllLoaded();
             };
         } else {
             // skip non-image assets like audio
-            loadedCount++;
+            isAllLoaded();
         }
     });
-
-    function isAllLoaded() {
-        loadedCount++;
-        return loadedCount >= assetKeys.length;
-    }
 }
+
 
 const Engine = {
     lastAnimTime: 0,
@@ -860,6 +879,9 @@ const Game = {
 window.onload = () => {
     preloadAllAssets(() => {
         console.log('All assets preloaded!');
+        document.getElementById('screen-loading').classList.remove('active');
+        document.getElementById('screen-start').classList.add('active');
+
         Game.init();
     });
 };
