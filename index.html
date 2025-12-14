@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+  <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -44,13 +44,13 @@
 
         .asset-box {
             position: relative;
-            background-color: rgba(255, 0, 0, 0.1);
-            border: 2px dashed #ff0000;
+            background-color: transparent;
+            border: none;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            color: #ff0000;
+            color: transparent;
             font-size: 11px;
             font-weight: bold;
             background-size: contain;
@@ -85,7 +85,7 @@
         }
         @keyframes jitter {
             0%   { transform: translate(1px, 1px) rotate(0deg); }
-            25%  { transform: translate(-1px, -2px) rotate(-1deg); }
+            25%  { transform: translate(-1px, -2px) rotate(-1deg); }use
             50%  { transform: translate(-2px, 0px) rotate(1deg); }
             75%  { transform: translate(1px, 2px) rotate(0deg); }
             100% { transform: translate(-1px, 1px) rotate(-1deg); }
@@ -130,11 +130,13 @@
         }
 
         .hud {
-            position: fixed;
+            position: absolute;
             top: 10px;
-            left: 0;
-            width: 100%;
-            height: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 98vw;
+            max-width: none;
+            height: 50px;
             z-index: 500;
             display: flex;
             justify-content: space-between;
@@ -148,9 +150,23 @@
         }
 
         #screen-game {
+            background-color: #f6e6ff;
+        }
+
+        .game-window {
+            position: relative;
+            width: 98vw;
+            max-width: none;
+            height: calc(100vh - 90px);
+            margin-top: 70px;
+            margin-bottom: 10px;
+            border: 2px dashed rgba(200, 180, 220, 0.4);
+            border-radius: 15px;
+            overflow: hidden;
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
+            box-shadow: 0 0 15px rgba(200, 180, 220, 0.2);
         }
 
         /* Tutorial Text Styling */
@@ -161,9 +177,9 @@
             white-space: pre-wrap;
             line-height: 1.5;
             padding: 20px;
-            background: rgba(255,255,255,0.5);
-            border-radius: 15px;
-            border: 2px dashed #b16cd6;
+            background: transparent;
+            border-radius: 0px;
+            border: none;
             max-width: 90%;
         }
 
@@ -194,11 +210,11 @@
 <body>
 
     <div id="hud" class="hud" style="display:none;">
-        <div id="ui-health" class="asset-box" style="width:40vw; max-width:200px; height:40px; position: relative;">
+        <div id="ui-health" class="asset-box" style="width:50vw; max-width:250px; height:50px; position: relative;">
             assets/ui/health_bar.png
             <div id="health-fill"></div>
         </div>
-        <div style="font-size:24px; font-weight:bold; color:#333; text-shadow: 1px 1px 0 white;">Time: <span id="timer">0</span>s</div>
+        <div style="font-size:28px; font-weight:200; color:#8a6a9a; font-family: 'Arial', 'Helvetica', sans-serif; text-shadow: 1px 1px 3px rgba(255,255,255,0.9);"><span id="timer">0</span>s</div>
     </div>
 
     <!-- <div id="screen-loading" class="screen active" style="background: #f6e6ff; display: flex; flex-direction: column; align-items: center; justify-content: center;">
@@ -207,48 +223,49 @@
         </div>
     </div> -->
 
-    <div id="screen-loading" class="screen active" style=" background: #f6e6ff;">
+    <div id="screen-loading" class="screen active" style="background: #f6e6ff;">
         <div style="display:flex; flex-direction:column; gap:30px; align-items:center;">
-            <div class="tut-text jitter">
-                Loading...
-            </div>
+            <div id="loading-asset" class="asset-box jitter" style="width:200px; height:200px;">assets/ui/loading.png</div>
         </div>
     </div>
 
     <div id="screen-start" class="screen">
         <div style="display:flex; flex-direction:column; gap:30px; align-items:center;">
             <div id="title-art" class="asset-box jitter" style="width:90vw; height:50vw; max-height: 300px;">assets/ui/title.png</div>
-            <div id="btn-start" class="asset-box btn jitter" style="width:60vw; height:20vw; max-height: 100px;">
+            <div id="btn-start" class="asset-box btn jitter" style="width:70vw; height:25vw; max-width: 400px; max-height: 120px;">
                 START GAME<br>(assets/ui/btn_start.png)
             </div>
         </div>
     </div>
 
-    <div id="screen-tutorial" class="screen">
-        <div style="display:flex; flex-direction:column; gap:30px; align-items:center; width: 100%;">
+    <div id="screen-tutorial" class="screen" style="background-size: cover; background-position: center; background-repeat: no-repeat;">
+        <div style="display:flex; flex-direction:column; gap:30px; align-items:center; justify-content: center; width: 100%; height: 100%;">
             <div id="tut-text" class="tut-text jitter">
                 Loading...
             </div>
-            <div id="btn-ready" class="asset-box btn jitter" style="width:50vw; height:18vw; max-width: 200px; max-height: 80px;">
+            <div id="btn-ready" class="asset-box btn jitter" style="width:65vw; height:22vw; max-width: 350px; max-height: 110px;">
                 I'M READY<br>(assets/ui/btn_ready.png)
             </div>
         </div>
     </div>
 
-    <div id="screen-game" class="screen"></div>
+    <div id="screen-game" class="screen">
+        <div class="game-window" id="game-window"></div>
+    </div>
 
     <div id="screen-end" class="screen" style="background: white;">
         <div style="display:flex; flex-direction:column; gap:20px; align-items:center; padding: 20px;">
             <!-- <h1 style="font-size: 32px; margin-bottom: 10px;">Happy Birthday!</h1> -->
             <div id="final-art" class="asset-box jitter" style="width:80vw; height:100vw; max-width: 400px; max-height: 50vh;">assets/ui/final_art.png</div>
-            <h2 id="end-score" style="font-size: 24px;">Score: 0</h2>
-            <div id="btn-replay" class="asset-box btn jitter" style="width:150px; height:60px; margin-top: 10px;">REPLAY</div>
+            <h2 id="end-score" class="jitter" style="font-size: 32px; font-weight: 500; color: #333;">Score: 0</h2>
+            <div id="btn-replay" class="asset-box btn jitter" style="width:220px; height:90px; margin-top: 10px;">REPLAY</div>
         </div>
     </div>
 
 <script>
 const ASSETS = {
     // 'bg_start':    { path: 'assets/ui/bg_start.png' }, // REMOVED per request
+    'loading':     { path: 'assets/ui/loading.png' },
     'title':       { path: 'assets/ui/title.png' },
     'btn_start':   { path: 'assets/ui/btn_start.png' },
     'btn_ready':   { path: 'assets/ui/btn_ready.png' },
@@ -452,7 +469,6 @@ const Game = {
         Engine.loadAsset(document.getElementById('btn-start'), 'btn_start');
         Engine.loadAsset(document.getElementById('btn-ready'), 'btn_ready');
         Engine.loadAsset(document.getElementById('btn-replay'), 'btn_replay');
-        
 
         // Removed bg_start load
         Engine.loadAsset(document.getElementById('title-art'), 'title');
@@ -477,7 +493,14 @@ const Game = {
     showTutorial: function(gameName) {
         this.activeGame = gameName;
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById('screen-tutorial').classList.add('active');
+        const tutorialScreen = document.getElementById('screen-tutorial');
+        tutorialScreen.classList.add('active');
+        
+        // Set the game background on the tutorial screen
+        const bgKey = 'bg_' + gameName;
+        if(loadedImages[bgKey]) {
+            tutorialScreen.style.backgroundImage = `url('${loadedImages[bgKey].src}')`;
+        }
         
         const tutText = document.getElementById('tut-text');
         tutText.innerHTML = ''; // clear previous content
@@ -489,7 +512,7 @@ const Game = {
 
         // Create img element
         const img = document.createElement('img');
-        img.style.maxWidth = '80%';
+        img.style.maxWidth = '95%';
         img.style.height = 'auto';
         img.style.display = 'block';
         img.style.margin = '0 auto'; // center horizontally
@@ -507,11 +530,21 @@ const Game = {
     startCountdown: function() {
         const gameName = this.activeGame;
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        const container = document.getElementById('screen-game');
-        container.classList.add('active');
+        const screenGame = document.getElementById('screen-game');
+        const gameWindow = document.getElementById('game-window');
+        screenGame.classList.add('active');
         
-        container.innerHTML = '';
-        Engine.loadAsset(container, 'bg_' + gameName);
+        // Set game-specific background colors
+        if(gameName === 'game1') {
+            screenGame.style.backgroundColor = '#f6e6ff'; // Light purple (original)
+        } else if(gameName === 'game2') {
+            screenGame.style.backgroundColor = '#ede0ff'; // More violet
+        } else if(gameName === 'game3') {
+            screenGame.style.backgroundColor = '#f0e0f5'; // Reddish purple/violet
+        }
+        
+        gameWindow.innerHTML = '';
+        Engine.loadAsset(gameWindow, 'bg_' + gameName);
         Engine.playMusic(gameName);
 
         document.getElementById('hud').style.display = 'none';
@@ -532,7 +565,7 @@ const Game = {
                 numEl.style.zIndex = '1000';
                 
                 Engine.loadAsset(numEl, 'count_' + count);
-                container.appendChild(numEl);
+                gameWindow.appendChild(numEl);
                 
                 setTimeout(() => { if(numEl.parentNode) numEl.remove(); }, 900);
                 
@@ -548,9 +581,31 @@ const Game = {
 
     startGame: function(gameName, skipSetup = false) {
         this.updateDimensions();
+        const gameWindow = document.getElementById('game-window');
+        const gameWindowRect = gameWindow.getBoundingClientRect();
+        this.gameWindowX = gameWindowRect.left;
+        this.gameWindowY = gameWindowRect.top;
+        this.gameWindowWidth = gameWindowRect.width;
+        this.gameWindowHeight = gameWindowRect.height;
+        
         if(!skipSetup) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById('screen-game').classList.add('active');
+        }
+        
+        // Set game-specific background and timer colors
+        const screenGame = document.getElementById('screen-game');
+        const timerDiv = document.querySelector('.hud > div:last-child');
+        
+        if(gameName === 'game1') {
+            screenGame.style.backgroundColor = '#f6e6ff'; // Light purple (original)
+            timerDiv.style.color = '#8a6a9a'; // Original timer color
+        } else if(gameName === 'game2') {
+            screenGame.style.backgroundColor = '#ede0ff'; // More violet
+            timerDiv.style.color = '#7a5a9a'; // More violet timer
+        } else if(gameName === 'game3') {
+            screenGame.style.backgroundColor = '#f0e0f5'; // Reddish purple/violet
+            timerDiv.style.color = '#9a6a8a'; // Reddish purple timer
         }
         
         document.getElementById('hud').style.display = 'flex';
@@ -567,9 +622,8 @@ const Game = {
         window.ontouchmove = null;
         
         if(!skipSetup) {
-            const container = document.getElementById('screen-game');
-            container.innerHTML = '';
-            Engine.loadAsset(container, 'bg_' + gameName);
+            gameWindow.innerHTML = '';
+            Engine.loadAsset(gameWindow, 'bg_' + gameName);
             Engine.playMusic(gameName);
         }
 
@@ -623,7 +677,7 @@ const Game = {
         el.style.height = h + 'px';
         el.style.zIndex = '100'; // Ensure assets are above background
         Engine.loadAsset(el, key);
-        document.getElementById('screen-game').appendChild(el);
+        document.getElementById('game-window').appendChild(el);
         const ent = { el, x, y, initialY: y, w, h, vx:0, vy:0, type, dead:false };
         this.entities.push(ent);
         return ent;
@@ -657,9 +711,9 @@ const Game = {
     groundY: 0,
     
     initRunner: function() {
-        // INCREASED SIZE: Hero 100->150
-        this.groundY = this.height * 0.85; 
-        this.hero = this.spawn('hero_run', 50, this.groundY - 150, 150, 150, 'hero');
+        // INCREASED SIZE: Hero 100->150, moved left from 50 to 30 to 15 to 5
+        this.groundY = this.gameWindowHeight * 0.85; 
+        this.hero = this.spawn('hero_run', 5, this.groundY - 150, 150, 150, 'hero');
         this.hero.onGround = true;
         this.hero.jumpCount = 0; 
         this.timer = 120;
@@ -708,7 +762,7 @@ const Game = {
             // INCREASED SIZE: Enemy 80->120. Adjusted spawn Y logic.
             const enemyY = isAir ? (this.groundY - 300) : (this.groundY - 120);
             
-            const enemy = this.spawn(isAir ? 'enemy_a' : 'enemy_g', this.width + 50, enemyY, 120, 120, 'enemy');
+            const enemy = this.spawn(isAir ? 'enemy_a' : 'enemy_g', this.gameWindowWidth + 50, enemyY, 120, 120, 'enemy');
             enemy.isAir = isAir; 
             enemy.vx = -(4 + difficulty * 2); 
             this.timer = Math.max(40, 120 - difficulty * 20);
@@ -749,25 +803,27 @@ const Game = {
     initPong: function() {
         const paddleHeight = 40;
         const paddleWidth = 140;
-        const paddleY = this.height - paddleHeight - 10;
-        this.paddle = this.spawn('paddle', this.width/2 - paddleWidth/2, paddleY, paddleWidth, paddleHeight, 'paddle');
+        const paddleY = this.gameWindowHeight - paddleHeight - 10;
+        this.paddle = this.spawn('paddle', this.gameWindowWidth/2 - paddleWidth/2, paddleY, paddleWidth, paddleHeight, 'paddle');
     
         
-        const ball = this.spawn('ball', this.width/2 - 35, 100, 70, 70, 'ball');
+        const ball = this.spawn('ball', this.gameWindowWidth/2 - 35, 100, 70, 70, 'ball');
         ball.vx = 4; ball.vy = 4;
         this.balls = [ball];
         this.ballSpawnTimer = 180;
         
         window.onpointermove = (e) => {
             if(this.paddle && this.state === 'playing') {
-                this.paddle.x = Math.max(0, Math.min(this.width - 180, e.clientX - 90));
+                const relativeX = e.clientX - this.gameWindowX;
+                this.paddle.x = Math.max(0, Math.min(this.gameWindowWidth - 180, relativeX - 90));
             }
         };
         
         window.ontouchmove = (e) => {
             if(this.paddle && this.state === 'playing') {
                 e.preventDefault();
-                this.paddle.x = Math.max(0, Math.min(this.width - 180, e.touches[0].clientX - 90));
+                const relativeX = e.touches[0].clientX - this.gameWindowX;
+                this.paddle.x = Math.max(0, Math.min(this.gameWindowWidth - 180, relativeX - 90));
             }
         };
     },
@@ -777,8 +833,8 @@ const Game = {
         const difficulty = Math.min(this.score / 25, 3);
         
         this.ballSpawnTimer--;
-        if(this.ballSpawnTimer <= 0 && this.balls.length < 6) {
-            const newBall = this.spawn('ball', Math.random() * (this.width - 60), 100, 60, 60, 'ball');
+        if(this.ballSpawnTimer <= 0 && this.balls.length < 10) {
+            const newBall = this.spawn('ball', Math.random() * (this.gameWindowWidth - 60), 100, 60, 60, 'ball');
             newBall.vx = (Math.random() - 0.5) * 8;
             newBall.vy = 4 + difficulty;
             this.balls.push(newBall);
@@ -788,9 +844,9 @@ const Game = {
         this.balls.forEach(ball => {
             if(ball.dead) return;
             
-            if(ball.x < 0 || ball.x > this.width - 60) {
+            if(ball.x < 0 || ball.x > this.gameWindowWidth - 60) {
                 ball.vx *= -1;
-                ball.x = Math.max(0, Math.min(this.width - 60, ball.x));
+                ball.x = Math.max(0, Math.min(this.gameWindowWidth - 60, ball.x));
             }
             if(ball.y < 60) {
                 ball.vy *= -1;
@@ -816,7 +872,7 @@ const Game = {
                 setTimeout(() => this.paddle.el.classList.remove('flash'), 200);
             }
             
-            if(ball.y > this.height) {
+            if(ball.y > this.gameWindowHeight) {
                 ball.dead = true; ball.el.remove();
                 this.health -= 15;
                 Engine.playSFX('miss');
@@ -827,7 +883,7 @@ const Game = {
         
         this.balls = this.balls.filter(b => !b.dead);
         if(this.balls.length === 0) {
-            const ball = this.spawn('ball', this.width/2 - 30, 100, 60, 60, 'ball');
+            const ball = this.spawn('ball', this.gameWindowWidth/2 - 30, 100, 60, 60, 'ball');
             ball.vx = 4;
             ball.vy = 4 + difficulty;
             this.balls = [ball];
@@ -847,7 +903,7 @@ const Game = {
             const isGood = Math.random() > 0.35;
             
             // INCREASED SIZE: Items 100->130
-            const obj = this.spawn(isGood ? 'item_good' : 'item_bad', Math.random() * (this.width - 130), -130, 130, 130, isGood ? 'good' : 'bad');
+            const obj = this.spawn(isGood ? 'item_good' : 'item_bad', Math.random() * (this.gameWindowWidth - 130), -130, 130, 130, isGood ? 'good' : 'bad');
             
             const baseSpeed = 2.0 + difficulty * 1.2;
             const randomVar = (Math.random() * 2) - 0.5; 
@@ -883,7 +939,7 @@ const Game = {
         }
         
         this.entities.forEach(e => {
-            if((e.type === 'good' || e.type === 'bad') && e.y > this.height) {
+            if((e.type === 'good' || e.type === 'bad') && e.y > this.gameWindowHeight) {
                 if(!e.dead && e.type === 'good') {
                     this.health -= 15;
                     this.combo = 0;
@@ -899,6 +955,17 @@ const Game = {
 };
 
 window.onload = () => {
+    // Load the loading image first
+    const loadingImg = new Image();
+    loadingImg.src = 'assets/ui/loading.png';
+    loadingImg.onload = () => {
+        loadedImages['loading'] = loadingImg;
+        const loadingAsset = document.getElementById('loading-asset');
+        if(loadingAsset) {
+            Engine.loadAsset(loadingAsset, 'loading');
+        }
+    };
+    
     preloadAllAssets(() => {
         console.log('All assets preloaded!');
         document.getElementById('screen-loading').classList.remove('active');
