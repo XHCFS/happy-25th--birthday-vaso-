@@ -747,14 +747,16 @@ const Game = {
     ballSpawnTimer: 0,
     
     initPong: function() {
-        const paddleY = this.height - 150;
-        // INCREASED SIZE: Paddle 130->180, Ball 50->60
-        this.paddle = this.spawn('paddle', this.width/2 - 90, paddleY, 180, 40, 'paddle');
+        const paddleHeight = 40;
+        const paddleWidth = 140;
+        const paddleY = this.height - paddleHeight - 10;
+        this.paddle = this.spawn('paddle', this.width/2 - paddleWidth/2, paddleY, paddleWidth, paddleHeight, 'paddle');
+    
         
-        const ball = this.spawn('ball', this.width/2 - 30, 100, 60, 60, 'ball');
+        const ball = this.spawn('ball', this.width/2 - 35, 100, 70, 70, 'ball');
         ball.vx = 4; ball.vy = 4;
         this.balls = [ball];
-        this.ballSpawnTimer = 300;
+        this.ballSpawnTimer = 180;
         
         window.onpointermove = (e) => {
             if(this.paddle && this.state === 'playing') {
@@ -775,7 +777,7 @@ const Game = {
         const difficulty = Math.min(this.score / 25, 3);
         
         this.ballSpawnTimer--;
-        if(this.ballSpawnTimer <= 0 && this.balls.length < 4) {
+        if(this.ballSpawnTimer <= 0 && this.balls.length < 6) {
             const newBall = this.spawn('ball', Math.random() * (this.width - 60), 100, 60, 60, 'ball');
             newBall.vx = (Math.random() - 0.5) * 8;
             newBall.vy = 4 + difficulty;
