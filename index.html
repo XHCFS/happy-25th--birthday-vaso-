@@ -254,6 +254,9 @@ const ASSETS = {
     'btn_ready':   { path: 'assets/ui/btn_ready.png' },
     'health_bar':  { path: 'assets/ui/health_bar.png' },
     'final_art':   { path: 'assets/ui/final_art.png' },
+    'tut_game1':     { path: 'assets/ui/tut_game1.png' },
+    'tut_game2':     { path: 'assets/ui/tut_game2.png' },
+    'tut_game3':     { path: 'assets/ui/tut_game3.png' },
     'count_3':     { path: 'assets/ui/count_3.png' },
     'count_2':     { path: 'assets/ui/count_2.png' },
     'count_1':     { path: 'assets/ui/count_1.png' },
@@ -474,13 +477,28 @@ const Game = {
         document.getElementById('screen-tutorial').classList.add('active');
         
         const tutText = document.getElementById('tut-text');
-        if(gameName === 'game1') {
-            tutText.innerHTML = '<strong>SAVE KOSTAKIS</strong><br><br>Escape Plant AIDS and missing posters';
-        } else if(gameName === 'game2') {
-            tutText.innerHTML = '<strong>SAVE TURTLE!!</strong><br><br>You dropped your turtle in a carnival ride..<br>Save him';
-        } else if(gameName === 'game3') {
-            tutText.innerHTML = '<strong>SAVE.. YOURSELF</strong><br><br>AVOID HEART FAILURE...<br>drink the energy drinks...';
-        }
+        tutText.innerHTML = ''; // clear previous content
+
+        let assetKey = '';
+        if (gameName === 'game1') assetKey = 'tut_game1';
+        else if (gameName === 'game2') assetKey = 'tut_game2';
+        else if (gameName === 'game3') assetKey = 'tut_game3';
+
+        // Create img element
+        const img = document.createElement('img');
+        img.style.maxWidth = '80%';
+        img.style.height = 'auto';
+        img.style.display = 'block';
+        img.style.margin = '0 auto'; // center horizontally
+
+        // Assign the preloaded src
+        img.src = loadedImages[assetKey].src;
+
+        // Append to tutorial container
+        tutText.appendChild(img);
+
+
+
     },
 
     startCountdown: function() {
