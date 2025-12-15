@@ -257,7 +257,8 @@
         <div style="display:flex; flex-direction:column; gap:20px; align-items:center; padding: 20px;">
             <!-- <h1 style="font-size: 32px; margin-bottom: 10px;">Happy Birthday!</h1> -->
             <div id="final-art" class="asset-box jitter" style="width:80vw; height:100vw; max-width: 400px; max-height: 50vh;">assets/ui/final_art.png</div>
-            <h2 id="end-score" class="jitter" style="font-size: 32px; font-weight: 500; color: #333;">Score: 0</h2>
+            <h2 id="end-score" class="jitter" style="font-size: 32px; font-weight: 500; color: #333; text-align: center; max-width: 90vw; word-wrap: break-word;">Score: 0</h2>
+            <div id="high-score-display" class="jitter" style="font-size: 24px; font-weight: 300; color: #666; text-align: center; max-width: 90vw;"></div>
             <div id="btn-replay" class="asset-box btn jitter" style="width:220px; height:90px; margin-top: 10px;">REPLAY</div>
         </div>
     </div>
@@ -498,6 +499,9 @@ const Game = {
         const tutorialScreen = document.getElementById('screen-tutorial');
         tutorialScreen.classList.add('active');
         
+        // Hide HUD on tutorial screen
+        document.getElementById('hud').style.display = 'none';
+        
         // Set the game background on the tutorial screen
         const bgKey = 'bg_' + gameName;
         if(loadedImages[bgKey]) {
@@ -707,7 +711,26 @@ const Game = {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById('hud').style.display = 'none';
             document.getElementById('screen-end').classList.add('active');
-            document.getElementById('end-score').innerText = "Total Time: " + Math.floor(this.totalScore) + "s";
+            
+            const finalTime = Math.floor(this.totalScore);
+            document.getElementById('end-score').innerText = "Total Time: " + finalTime + "s";
+            
+            // High score logic (higher time is better)
+            const highScoreDisplay = document.getElementById('high-score-display');
+            let highScore = localStorage.getItem('birthdayGameHighScore');
+            
+            if(highScore === null || finalTime > parseInt(highScore)) {
+                // New high score! (higher time is better)
+                localStorage.setItem('birthdayGameHighScore', finalTime.toString());
+                highScoreDisplay.innerHTML = 'NEW HIGH SCORE';
+                highScoreDisplay.style.color = '#ff6b9d';
+                highScoreDisplay.style.fontWeight = '600';
+            } else {
+                // Not a high score
+                highScoreDisplay.innerHTML = 'Best: ' + highScore + 's';
+                highScoreDisplay.style.color = '#666';
+                highScoreDisplay.style.fontWeight = '300';
+            }
         }
     },
 
