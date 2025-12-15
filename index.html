@@ -911,7 +911,7 @@ const Game = {
             // INCREASED SIZE: Items 100->130
             const obj = this.spawn(isGood ? 'item_good' : 'item_bad', Math.random() * (this.gameWindowWidth - 130), -130, 130, 130, isGood ? 'good' : 'bad');
             
-            const baseSpeed = 2.0 + difficulty * 1.2;
+            const baseSpeed = 5.0 + difficulty * 1.2;
             const randomVar = (Math.random() * 2) - 0.5; 
             obj.vy = Math.max(1, baseSpeed + randomVar);
             
